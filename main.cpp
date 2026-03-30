@@ -7,8 +7,7 @@
 #include <chrono>
 #include <sstream>
 
-// Protects standard output from race conditions during multithreaded logging
-std::mutex console_mutex; 
+std::mutex console_mutex;
 
 struct Transaction {
     int id;
@@ -17,15 +16,14 @@ struct Transaction {
     std::string timestamp;
 };
 
-// Worker thread logic: parses data chunk and aggregates transaction metrics
 void processChunk(const std::vector<std::string>& chunk, int threadId) {
     int processedCount = 0;
     double threadTotalAmount = 0.0;
-    
+
     for (const auto& line : chunk) {
-        // Bypass empty rows and cvs headers
+        // Skip empty lines and CSV headers
         if (line.empty() || line.find("transaction_amount") != std::string::npos) {
-            continue; 
+            continue;
         }
 
         std::stringstream ss(line);
@@ -41,7 +39,7 @@ void processChunk(const std::vector<std::string>& chunk, int threadId) {
             threadTotalAmount += tx.amount;
             processedCount++;
         } catch (...) {
-            // Silently drop malformed rows to maintain pipeline throughput
+            // Drop malformed rows to maintain throughput
             continue;
         }
     }
@@ -57,30 +55,30 @@ int main() {
     std::ifstream file(filename);
 
     if (!file.is_open()) {
-        std::cerr << "Fatal Error: Could not locate data payload (" << filename << ")\n";
+        std::cerr << "Error: Could not locate " << filename << "\n";
         return 1;
     }
 
     std::vector<std::string> allLines;
     std::string line;
-    
-    // Load dataset into memory (optimization note: use memory mapping for files > RAM capacity)
+
+    // Ingest dataset
     while (std::getline(file, line)) {
         allLines.push_back(line);
     }
     file.close();
 
-    // Dynamically allocate workload based on available system cores
-    int numThreads = std::thread::hardware_concurrency(); 
-    if (numThreads == 0) numThreads = 4; // Fallback for restrictive environments
+    // Workload distribution
+    int numThreads = std::thread::hardware_concurrency();
+    if (numThreads == 0) numThreads = 4;
 
     std::vector<std::thread> threads;
-    int chunkSize = allLines.size() / numThreads;
+    size_t chunkSize = allLines.size() / numThreads;
 
     for (int i = 0; i < numThreads; ++i) {
         int startIdx = i * chunkSize;
-        int endIdx = (i == numThreads - 1) ? allLines.size() : startIdx + chunkSize; 
-        
+        int endIdx = (i == numThreads - 1) ? allLines.size() : startIdx + chunkSize;
+
         std::vector<std::string> chunk(allLines.begin() + startIdx, allLines.begin() + endIdx);
         threads.push_back(std::thread(processChunk, chunk, i));
     }
@@ -91,7 +89,7 @@ int main() {
 
     auto end_time = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> ms_double = end_time - start_time;
-    
+
     std::cout << "Ingestion pipeline completed in " << ms_double.count() << " ms\n";
     return 0;
 }
