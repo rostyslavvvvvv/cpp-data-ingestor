@@ -1,10 +1,10 @@
-# Base image optimized for C++ build environments
+# Build environment
 FROM ubuntu:22.04
 
-# Suppress interactive prompts during dependency installation
+# Non-interactive build
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install core build toolchain and clean up apt cache
+# Build tools
 RUN apt-get update && apt-get install -y \
     g++ \
     cmake \
@@ -13,14 +13,14 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /opt/data-ingestor
 
-# Copy source payload
+# Source code
 COPY . .
 
-# Compile binary in Release mode
+# Production build
 RUN mkdir -p build && \
     cd build && \
     cmake -DCMAKE_BUILD_TYPE=Release .. && \
     make
 
-# Execute ingestion pipeline
+# Run
 CMD ["./build/DataIngestor"]
