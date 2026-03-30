@@ -1,0 +1,4 @@
+build/
+docker_build/
+data.csv
+.DS_Store
