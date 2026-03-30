@@ -25,7 +25,7 @@ You don't need a local C++ compiler to run this. The entire pipeline is containe
 
 ```bash
 # Clone the repository
-git clone [https://github.com/rostyslavvvvvv/cpp-data-ingestor.git](https://github.com/rostyslavvvvvv/cpp-data-ingestor.git)
+git clone https://github.com/rostyslavvvvvv/cpp-data-ingestor.git
 cd cpp-data-ingestor
 
 # Build the container image
@@ -33,3 +33,4 @@ docker build -t cpp-data-engine .
 
 # Run the ingestion engine
 docker run cpp-data-engine
+```
