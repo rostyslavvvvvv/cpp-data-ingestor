@@ -1,26 +1,31 @@
-# Build environment
-FROM ubuntu:22.04
+# STAGE 1: Build environment
+FROM ubuntu:22.04 AS builder
 
-# Non-interactive build
+# Prevent interactive prompts during build
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Build tools
+# Install build tools
 RUN apt-get update && apt-get install -y \
     g++ \
     cmake \
     make \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /opt/data-ingestor
-
-# Source code
+WORKDIR /app
 COPY . .
 
-# Production build
-RUN mkdir -p build && \
-    cd build && \
+# Compile the optimized binary
+RUN mkdir build && cd build && \
     cmake -DCMAKE_BUILD_TYPE=Release .. && \
     make
 
-# Run
-CMD ["./build/DataIngestor"]
+# STAGE 2: Runtime environment (The "Lean" image)
+FROM ubuntu:22.04
+
+WORKDIR /root/
+# Only copy the compiled binary and data from the builder stage
+COPY --from=builder /app/build/DataIngestor .
+COPY --from=builder /app/data.csv .
+
+# Run the binary
+CMD ["./DataIngestor"]
