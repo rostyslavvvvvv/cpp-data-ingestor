@@ -22,7 +22,7 @@ A high-performance, lock-free data processing pipeline built in C++17. This proj
 
 ```bash
 # Clone the repository
-git clone [https://github.com/rostyslavvvvvv/cpp-data-ingestor.git](https://github.com/rostyslavvvvvv/cpp-data-ingestor.git)
+git clone https://github.com/rostyslavvvvvv/cpp-data-ingestor.git
 cd cpp-data-ingestor
 
 # Build the container image
